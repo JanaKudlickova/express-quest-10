@@ -7,6 +7,7 @@ const db = connection.promise();
 const validate = (data) => {
     return  Joi.object({
     email: Joi.string().email().max(255).required(),
+    password:Joi.string().min(8).max(50).required(),
     firstname: Joi.string().max(255).required(),
     lastname: Joi.string().max(255).required(),
     city: Joi.string().allow(null, '').max(255),
@@ -29,18 +30,36 @@ const findOneUserById = (id) => {
     return db.query(sql, sqlValues).then(([results]) => results);
 }
 
+const findByEmail = (email) => {
+  return db
+    .query('SELECT * FROM users WHERE email = ?', [email])
+    .then(([results]) => results[0]);
+};
 
-const addNewUser = ({email, firstname, lastname, city, language}) => {
+const findByEmailWithDifferentId = (email, id) => {
+  return db
+    .query('SELECT * FROM users WHERE email = ? AND id <> ?', [email, id])
+    .then(([results]) => results[0]);
+};
+
+
+const addNewUser = ({ firstname, lastname, city, language, email, password }) => {
+  return hashPassword(password).then((hashedPassword) => {
     return db
-    .query(
-        'INSERT INTO users (email, firstname, lastname, city, language) VALUES (?, ?, ?, ?, ?)',
-        [email, firstname, lastname, city, language]
-    )
-    .then(([result]) => {
+      .query('INSERT INTO users SET ?', {
+        firstname,
+        lastname,
+        city,
+        language,
+        email,
+        hashedPassword,
+      })
+      .then(([result]) => {
         const id = result.insertId;
-        return { id, email, firstname, lastname, city, language }
-    })
-}
+        return { firstname, lastname, city, language, email, id };
+      });
+  });
+};
 
 const updateUser = (id, newAttributes) => {
     return db.query('UPDATE users SET ? WHERE id = ?', [newAttributes, id]);
@@ -77,5 +96,7 @@ module.exports = {
   updateUser,
   deleteUser,
   hashPassword,
-  verifyPassword
+  verifyPassword,
+  findByEmail,
+  findByEmailWithDifferentId
 }

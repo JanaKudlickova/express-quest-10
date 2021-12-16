@@ -30,6 +30,7 @@ usersRouter.get('/:id', (req, res) => {
       });
   });
 
+  /*
 usersRouter.post('/', (req, res) => {
     const error = Users.validate(req.body);
     if (error) {
@@ -41,9 +42,33 @@ usersRouter.post('/', (req, res) => {
         })
         .catch((err) => {
           console.error(err);
-          res.status(500).send('Error saving the movie');
+          res.status(500).send('Error saving the user');
         });
     }
+  });
+  */
+
+  usersRouter.post('/', (req, res) => {
+    const { email } = req.body;
+    let validationErrors = null;
+    Users.findByEmail(email)
+      .then((existingUserWithEmail) => {
+        if (existingUserWithEmail) return Promise.reject('DUPLICATE_EMAIL');
+        validationErrors = User.validate(req.body);
+        if (validationErrors) return Promise.reject('INVALID_DATA');
+        return Users.create(req.body);
+      })
+      .then((createdUser) => {
+        res.status(201).json(createdUser);
+      })
+      .catch((err) => {
+        console.error(err);
+        if (err === 'DUPLICATE_EMAIL')
+          res.status(409).json({ message: 'This email is already used' });
+        else if (err === 'INVALID_DATA')
+          res.status(422).json({ validationErrors });
+        else res.status(500).send('Error saving the user');
+      });
   });
   
 usersRouter.put('/:id', (req, res) => {
