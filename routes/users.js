@@ -17,7 +17,6 @@ usersRouter.get('/', (req, res) => {
 });
 
 
-// TODO : GET /api/users/:id
 usersRouter.get('/:id', (req, res) => {
     const { id } = req.params
     Users.findOneUserById(id)
@@ -30,33 +29,15 @@ usersRouter.get('/:id', (req, res) => {
       });
   });
 
-  /*
-usersRouter.post('/', (req, res) => {
-    const error = Users.validate(req.body);
-    if (error) {
-      res.status(422).json({ validationErrors: error.details });
-    } else {
-      Users.addNewUser(req.body)
-        .then((addedUser) => {
-          res.status(201).json(addedUser);
-        })
-        .catch((err) => {
-          console.error(err);
-          res.status(500).send('Error saving the user');
-        });
-    }
-  });
-  */
-
   usersRouter.post('/', (req, res) => {
     const { email } = req.body;
     let validationErrors = null;
     Users.findByEmail(email)
       .then((existingUserWithEmail) => {
         if (existingUserWithEmail) return Promise.reject('DUPLICATE_EMAIL');
-        validationErrors = User.validate(req.body);
+        validationErrors = Users.validate(req.body);
         if (validationErrors) return Promise.reject('INVALID_DATA');
-        return Users.create(req.body);
+        return Users.addNewUser(req.body);
       })
       .then((createdUser) => {
         res.status(201).json(createdUser);
@@ -70,7 +51,8 @@ usersRouter.post('/', (req, res) => {
         else res.status(500).send('Error saving the user');
       });
   });
-  
+
+/*
 usersRouter.put('/:id', (req, res) => {
     let existingUser = null;
     let validationErrors = null;
@@ -94,6 +76,7 @@ usersRouter.put('/:id', (req, res) => {
         else res.status(500).send('Error updating a user.');
       });
   });
+  */
   
   usersRouter.delete('/:id', (req, res) => {
     Users.deleteUser(req.params.id)
@@ -108,5 +91,4 @@ usersRouter.put('/:id', (req, res) => {
   });
 
 
-// Don't forget to export the router in order to link it to the app in routes/index.js
 module.exports = usersRouter;

@@ -39,7 +39,7 @@ const findByEmail = (email) => {
 const findByEmailWithDifferentId = (email, id) => {
   return db
     .query('SELECT * FROM users WHERE email = ? AND id <> ?', [email, id])
-    .then(([results]) => results[0]);
+    .then(([results]) => results);
 };
 
 
